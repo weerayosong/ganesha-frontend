@@ -1,6 +1,10 @@
 # [WIP] Ganesha | Full stack Next.js Training ground
 
-## Next.js is Full stack framework? Wow, just try it out!
+## Next.js is Full stack framework? Wow, Let's try it out!
+
+## System Design & Software Architecture
+
+[Documentation](https://reliable-chebakia-e37cd1.netlify.app/)
 
 "Learning under the divine guidance of Lord Ganesha, with deepest devotion and reverence."
 
