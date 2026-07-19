@@ -9,7 +9,6 @@ import {
     FaBookOpen,
 } from "react-icons/fa6";
 
-// กำหนดหมวดหมู่จำลอง (ปรับเหลือ 5 หมวดหมู่เพื่อความสวยงามของ UI)
 const categories = [
     { id: "all", name: "ทั้งหมด", icon: FaLayerGroup },
     { id: "success", name: "การงาน", icon: FaBriefcase },
