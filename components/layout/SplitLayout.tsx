@@ -1,5 +1,6 @@
 import FlipCard from "@/components/ganesha/FlipCard";
 import ContentArea from "@/components/ganesha/ContentArea";
+import FilterBar from "@/components/ganesha/FilterBar";
 
 export default function SplitLayout() {
     return (
@@ -14,6 +15,9 @@ export default function SplitLayout() {
 
             {/* ฝั่งขวา: พื้นที่สำหรับข้อมูลและปุ่ม Action */}
             <section className="relative w-full lg:w-[50%] xl:w-[45%] h-[50dvh] lg:h-full flex flex-col px-6 pb-24 pt-4 lg:p-16 z-20 overflow-y-auto hide-scrollbar border-t lg:border-t-0 lg:border-l border-amber-900/20 bg-neutral-950/90 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none lg:justify-start xl:justify-center">
+                {/* ใส่แถบ Filter ตรงนี้ */}
+                <FilterBar />
+
                 <ContentArea />
             </section>
         </div>
