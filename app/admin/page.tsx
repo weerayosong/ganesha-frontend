@@ -1,15 +1,20 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { FaChevronLeft } from "react-icons/fa6";
 import LoginForm from "@/components/auth/LoginForm";
+import Logout from "@/components/auth/Logout";
 
 export default function AdminPage() {
+    // State ควบคุมสถานะการเข้าสู่ระบบ
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative p-6">
-            {/* พื้นหลัง */}
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,var(--color-dark-900)_0%,var(--color-dark-950)_70%)] z-0"></div>
 
             <div className="relative z-10 w-full max-w-md flex flex-col">
-                {/* back */}
                 <div className="mb-6">
                     <Link
                         href="/"
@@ -20,8 +25,12 @@ export default function AdminPage() {
                     </Link>
                 </div>
 
-                {/* LoginForm */}
-                <LoginForm />
+                {/* สลับ Component ตามสถานะ */}
+                {isLoggedIn ? (
+                    <Logout onLogout={() => setIsLoggedIn(false)} />
+                ) : (
+                    <LoginForm onLoginSuccess={() => setIsLoggedIn(true)} />
+                )}
             </div>
         </div>
     );
