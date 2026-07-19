@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* 1. สร้าง Design System (แทนที่ tailwind.config.js เดิม) */
+@theme {
+    --font-serif: "Noto Serif Thai", serif;
+    --font-sans: "Inter", sans-serif;
+
+    --color-gold-300: #e6c875;
+    --color-gold-400: #d4af37;
+    --color-gold-500: #aa8c2c;
+    --color-gold-700: #715d1d;
+    --color-dark-900: #121212;
+    --color-dark-950: #0a0a0a;
+}
+
+/* 2. ตั้งค่าพื้นฐานให้ Body */
+@layer base {
+    body {
+        font-family: var(--font-sans);
+        background-color: var(--color-dark-950);
+        color: #e5e5e5;
+        overflow: hidden; /* ล็อคหน้าจอจำลองการใช้งานแบบ Native App */
+    }
+}
+
+/* 3. สร้าง Custom Utilities สำหรับโปรเจกต์นี้ */
+@layer utilities {
+    /* 3D Utilities สำหรับพลิกการ์ด */
+    .perspective-1000 {
+        perspective: 1000px;
+    }
+    .preserve-3d {
+        transform-style: preserve-3d;
+    }
+    .backface-hidden {
+        backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+        transform: rotateY(180deg);
+    }
+
+    /* คลาสซ่อน Scrollbar */
+    .hide-scrollbar {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+}
+
+/* 4. Custom Animations (สำหรับปุ่มสักการะ) */
+@keyframes pop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+        color: var(--color-gold-300);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.animate-pop {
+    animation: pop 0.3s ease-out;
+}
