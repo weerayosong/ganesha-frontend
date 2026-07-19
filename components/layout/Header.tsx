@@ -17,7 +17,7 @@ export default function Header() {
                         Ganesha
                     </h1>
                     <p className="text-[10px] text-neutral-400 font-semibold tracking-widest uppercase">
-                        The Digital Altar
+                        Om Shri Ganeshaya Namaha
                     </p>
                 </div>
             </div>
