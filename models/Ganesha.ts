@@ -10,12 +10,14 @@ const ganeshaSchema = new Schema(
         color: { type: String },
         vehicle: { type: String },
         weapons: { type: String },
-        isDeleted: { type: Boolean, default: false }, // สำหรับทำ Soft Delete
+        imageUrl: { type: String, default: "" },
+        mantra: { type: String },
+
+        isDeleted: { type: Boolean, default: false },
     },
-    { timestamps: true }, // ให้มันเก็บ createAt, updatedAt อัตโนมัติ
+    { timestamps: true },
 );
 
-// เช็คว่ามี Model นี้อยู่แล้วหรือยัง (ป้องกัน error ตอน Next.js รีโหลด)
 const Ganesha = models.Ganesha || model("Ganesha", ganeshaSchema);
 
 export default Ganesha;
