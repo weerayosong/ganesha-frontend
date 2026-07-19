@@ -1,16 +1,32 @@
 "use client";
 
-import { FaLock, FaUser } from "react-icons/fa6";
+import { useState } from "react";
+import { FaLock, FaUser, FaEye, FaEyeSlash } from "react-icons/fa6";
 
 export default function LoginForm() {
+    // State สำหรับเปิด/ปิดการมองเห็นรหัสผ่าน
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <div className="w-full max-w-md mx-auto bg-neutral-900/80 border border-amber-900/30 p-8 rounded-2xl backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-500">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
                 <h2 className="text-2xl font-serif font-bold text-amber-500 mb-2">
                     Admin Access
                 </h2>
                 <p className="text-neutral-400 text-sm">
                     เข้าสู่ระบบเพื่อจัดการข้อมูล
+                </p>
+            </div>
+
+            {/* กล่อง Hint สำหรับ Demo (UX ที่ดีสำหรับคนมาเทสระบบ) */}
+            <div className="mb-6 p-3 bg-amber-900/10 border border-dashed border-amber-700/40 rounded-xl text-center">
+                <p className="text-[11px] text-amber-500/70 uppercase tracking-widest mb-1">
+                    Demo Account
+                </p>
+                <p className="text-sm text-amber-400 font-mono tracking-wider">
+                    User: <span className="text-white">demo</span>{" "}
+                    <span className="mx-2 text-amber-900/50">|</span> Pass:{" "}
+                    <span className="text-white">demo</span>
                 </p>
             </div>
 
@@ -32,11 +48,27 @@ export default function LoginForm() {
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <FaLock className="text-neutral-500 w-4 h-4" />
                     </div>
+
                     <input
-                        type="password"
+                        // สลับ type ตาม state
+                        type={showPassword ? "text" : "password"}
                         placeholder="Password"
-                        className="w-full bg-neutral-950 border border-neutral-800 text-neutral-200 text-sm rounded-xl focus:ring-1 focus:ring-amber-500 focus:border-amber-500 block pl-11 p-3.5 transition-colors outline-none"
+                        // เพิ่ม pr-11 เพื่อไม่ให้ตัวหนังสือวิ่งไปทับไอคอนดวงตาด้านขวา
+                        className="w-full bg-neutral-950 border border-neutral-800 text-neutral-200 text-sm rounded-xl focus:ring-1 focus:ring-amber-500 focus:border-amber-500 block pl-11 pr-11 p-3.5 transition-colors outline-none"
                     />
+
+                    {/* ปุ่มเปิด/ปิดตา */}
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer text-neutral-500 hover:text-amber-500 transition-colors"
+                    >
+                        {showPassword ? (
+                            <FaEyeSlash className="w-4 h-4" />
+                        ) : (
+                            <FaEye className="w-4 h-4" />
+                        )}
+                    </button>
                 </div>
 
                 {/* ปุ่ม Login */}
