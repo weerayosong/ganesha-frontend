@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Noto_Serif_Thai } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 
-// ล็อกการซูมหน้าจอ (แก้ปัญหา Double-Tap Zoom บน iOS)
+const notoSerifThai = Noto_Serif_Thai({
+    subsets: ["thai", "latin"],
+    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+    variable: "--font-noto-serif-thai",
+    display: "swap",
+});
+
 export const viewport: Viewport = {
     width: "device-width",
     initialScale: 1,
@@ -22,8 +29,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="th">
-            {/* เพิ่ม select-none เพื่อกันการเผลอคลุมดำ (Text Selection) */}
-            <body className="antialiased flex flex-col h-dvh select-none touch-manipulation">
+            <body
+                className={`${notoSerifThai.variable} font-sans antialiased flex flex-col h-dvh select-none touch-manipulation`}
+            >
                 <Header />
                 <div className="flex-1 overflow-hidden relative">
                     {children}

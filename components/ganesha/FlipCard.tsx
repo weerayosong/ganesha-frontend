@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaArrowRotateRight, FaWandMagicSparkles } from "react-icons/fa6";
+import { FaWandMagicSparkles, FaArrowsUpDown } from "react-icons/fa6";
 import Image from "next/image";
 
 interface FlipCardProps {
@@ -15,15 +15,41 @@ export default function FlipCard({
 }: FlipCardProps) {
     const [isFlipped, setIsFlipped] = useState(false);
 
+    // State จับการ Swipe ขึ้น-ลง
+    const [touchYStart, setTouchYStart] = useState(0);
+    const [touchYEnd, setTouchYEnd] = useState(0);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchYStart(e.touches[0].clientY);
+        setTouchYEnd(0);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        setTouchYEnd(e.touches[0].clientY);
+    };
+
+    const handleTouchEnd = () => {
+        if (!touchYStart || !touchYEnd) return;
+        const distance = touchYStart - touchYEnd;
+        // ถ้าปัดขึ้นหรือลงเกิน 40px ให้พลิกการ์ด
+        if (Math.abs(distance) > 40) {
+            setIsFlipped(!isFlipped);
+        }
+        setTouchYStart(0);
+        setTouchYEnd(0);
+    };
+
     return (
         <div
-            className="relative w-full max-w-55 md:max-w-70 lg:max-w-md flex justify-center items-center aspect-3/4 perspective-1000 cursor-pointer group"
-            onClick={() => setIsFlipped(!isFlipped)}
+            // เพิ่ม touch-none เพื่อป้องกันไม่ให้เบราว์เซอร์ไป scroll ตอนกำลังปัดที่ตัวการ์ด
+            className="relative w-full max-w-55 md:max-w-70 lg:max-w-md flex justify-center items-center aspect-3/4 perspective-1000 cursor-pointer group select-none touch-none"
+            onClick={() => setIsFlipped(!isFlipped)} // จิ้มแบบปกติ (Click) ก็ยังทำได้อยู่
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
-            {/* ออร่าด้านหลังการ์ด */}
             <div className="absolute -inset-4 bg-amber-700/20 blur-3xl rounded-full opacity-50 transition-colors duration-700"></div>
 
-            {/* กล่องบรรจุการ์ด (ใส่เอฟเฟกต์ 3D Flip) */}
             <div
                 className={`w-[90%] h-[90%] relative duration-700 preserve-3d transition-transform rounded-2xl shadow-2xl shadow-black/80 ${isFlipped ? "rotate-y-180" : ""}`}
             >
@@ -38,9 +64,11 @@ export default function FlipCard({
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent pointer-events-none"></div>
 
-                    {/* ไอคอนพลิกการ์ด (มุมขวาล่าง) */}
-                    <div className="absolute bottom-4 right-4 bg-black/60 p-2.5 rounded-full border border-amber-700/50 backdrop-blur-md transition-transform group-hover:scale-110">
-                        <FaArrowRotateRight className="w-4 h-4 text-amber-400" />
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1.5 rounded-full border border-amber-700/40 backdrop-blur-md opacity-70 flex items-center gap-2">
+                        <FaArrowsUpDown className="w-2.5 h-2.5 text-amber-400" />
+                        <span className="text-[9px] text-amber-200 tracking-widest uppercase">
+                            ปัดขึ้น-ลงเพื่อพลิกการ์ด
+                        </span>
                     </div>
                 </div>
 
