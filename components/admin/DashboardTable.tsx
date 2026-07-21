@@ -4,24 +4,29 @@ import { useState, useEffect } from "react";
 import { FaPenToSquare, FaEyeSlash, FaPlus, FaSpinner } from "react-icons/fa6";
 import GaneshaFormModal from "./GaneshaFormModal";
 
-// สร้าง Interface ให้ตรงกับโครงสร้าง Database
 interface GaneshaData {
     _id: string;
     order: number;
     nameTH: string;
     nameEN: string;
     prays: number;
+    meaning?: string;
+    color?: string;
+    vehicle?: string;
+    weapons?: string;
 }
 
 export default function DashboardTable() {
-    // State สำหรับเก็บข้อมูลจาก Database และสถานะการโหลด
     const [ganeshas, setGaneshas] = useState<GaneshaData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+    // 1. เพิ่ม State เก็บข้อมูลปางที่ถูกเลือก
+    const [selectedGanesha, setSelectedGanesha] = useState<GaneshaData | null>(
+        null,
+    );
 
-    // ฟังก์ชันดึงข้อมูลจาก API
     const fetchGaneshas = async () => {
         setIsLoading(true);
         try {
@@ -37,14 +42,15 @@ export default function DashboardTable() {
         }
     };
 
-    // สั่งให้ดึงข้อมูลทันทีเมื่อโหลด Component นี้เสร็จ
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchGaneshas();
     }, []);
 
-    const openModal = (mode: "add" | "edit") => {
+    // 2. ปรับฟังก์ชันให้รับข้อมูลปางเข้าไปด้วย
+    const openModal = (mode: "add" | "edit", ganeshaData?: GaneshaData) => {
         setModalMode(mode);
+        setSelectedGanesha(ganeshaData || null);
         setIsModalOpen(true);
     };
 
@@ -88,7 +94,6 @@ export default function DashboardTable() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-800/50">
-                            {/* แสดงสถานะตอนกำลังโหลด */}
                             {isLoading ? (
                                 <tr>
                                     <td
@@ -111,7 +116,6 @@ export default function DashboardTable() {
                                     </td>
                                 </tr>
                             ) : (
-                                /* ลูปแสดงข้อมูลจริงจาก Database */
                                 ganeshas.map((ganesha) => (
                                     <tr
                                         key={ganesha._id}
@@ -137,9 +141,13 @@ export default function DashboardTable() {
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center justify-center gap-2">
+                                                {/* 3. ส่งข้อมูลแถวนี้ไปให้ Modal ตอนกดปุ่มแก้ไข */}
                                                 <button
                                                     onClick={() =>
-                                                        openModal("edit")
+                                                        openModal(
+                                                            "edit",
+                                                            ganesha,
+                                                        )
                                                     }
                                                     className="p-2 rounded-lg bg-neutral-800 text-amber-500 hover:bg-amber-500 hover:text-neutral-900 transition-colors cursor-pointer"
                                                     title="แก้ไขข้อมูล"
@@ -166,11 +174,13 @@ export default function DashboardTable() {
                 </div>
             </div>
 
+            {/* 4. ส่งข้อมูล Props ชุดใหม่ไปที่ Modal */}
             <GaneshaFormModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 mode={modalMode}
                 onSuccess={fetchGaneshas}
+                initialData={selectedGanesha}
             />
         </>
     );

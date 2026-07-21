@@ -3,14 +3,39 @@
 import { useState, useEffect } from "react";
 import { FaXmark, FaFloppyDisk, FaSpinner } from "react-icons/fa6";
 
+// สร้าง Interface มารองรับข้อมูลแทนการใช้ any
+interface GaneshaInitialData {
+    _id?: string;
+    order: number | string;
+    nameTH: string;
+    nameEN: string;
+    prays: number;
+    meaning?: string;
+    color?: string;
+    vehicle?: string;
+    weapons?: string;
+}
+
 interface GaneshaFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     mode: "add" | "edit";
-    onSuccess?: () => void; // รับฟังก์ชันรีเฟรชตาราง
+    onSuccess?: () => void;
+    initialData?: GaneshaInitialData | null;
 }
 
-const initialForm = {
+interface FormDataState {
+    order: number | string;
+    nameTH: string;
+    nameEN: string;
+    prays: number | string;
+    meaning: string;
+    color: string;
+    vehicle: string;
+    weapons: string;
+}
+
+const emptyForm: FormDataState = {
     order: "",
     nameTH: "",
     nameEN: "",
@@ -26,22 +51,33 @@ export default function GaneshaFormModal({
     onClose,
     mode,
     onSuccess,
+    initialData,
 }: GaneshaFormModalProps) {
-    // State สำหรับเก็บข้อมูลฟอร์ม
-    const [formData, setFormData] = useState(initialForm);
+    const [formData, setFormData] = useState(emptyForm);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // รีเซ็ตฟอร์มทุกครั้งที่เปิด Modal ขึ้นมาใหม่
     useEffect(() => {
-        if (isOpen && mode === "add") {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setFormData(initialForm);
+        if (isOpen) {
+            if (mode === "edit" && initialData) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setFormData({
+                    order: initialData.order || "",
+                    nameTH: initialData.nameTH || "",
+                    nameEN: initialData.nameEN || "",
+                    prays: initialData.prays || 0,
+                    meaning: initialData.meaning || "",
+                    color: initialData.color || "",
+                    vehicle: initialData.vehicle || "",
+                    weapons: initialData.weapons || "",
+                });
+            } else {
+                setFormData(emptyForm);
+            }
         }
-    }, [isOpen, mode]);
+    }, [isOpen, mode, initialData]);
 
     if (!isOpen) return null;
 
-    // ฟังก์ชันจัดการตอนพิมพ์ข้อมูล
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
@@ -55,19 +91,24 @@ export default function GaneshaFormModal({
         }));
     };
 
-    // ฟังก์ชันกดยืนยันบันทึกข้อมูล
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            const res = await fetch("/api/ganeshas", {
-                method: "POST",
+            const url =
+                mode === "edit"
+                    ? `/api/ganeshas/${initialData?._id}`
+                    : "/api/ganeshas";
+            const method = mode === "edit" ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
 
             if (res.ok) {
-                if (onSuccess) onSuccess(); // สั่งรีเฟรชตาราง
-                onClose(); // ปิด Modal
+                if (onSuccess) onSuccess();
+                onClose();
             } else {
                 alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
             }
