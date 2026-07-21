@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FaPenToSquare, FaEyeSlash, FaPlus, FaSpinner } from "react-icons/fa6";
+// เพิ่ม Import FaEye เข้ามาด้วย
+import {
+    FaPenToSquare,
+    FaEyeSlash,
+    FaEye,
+    FaPlus,
+    FaSpinner,
+} from "react-icons/fa6";
 import GaneshaFormModal from "./GaneshaFormModal";
 
 interface GaneshaData {
@@ -14,6 +21,7 @@ interface GaneshaData {
     color?: string;
     vehicle?: string;
     weapons?: string;
+    isDeleted?: boolean; // เพิ่มฟิลด์นี้เข้ามาใน Interface
 }
 
 export default function DashboardTable() {
@@ -22,7 +30,6 @@ export default function DashboardTable() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-    // 1. เพิ่ม State เก็บข้อมูลปางที่ถูกเลือก
     const [selectedGanesha, setSelectedGanesha] = useState<GaneshaData | null>(
         null,
     );
@@ -47,11 +54,42 @@ export default function DashboardTable() {
         fetchGaneshas();
     }, []);
 
-    // 2. ปรับฟังก์ชันให้รับข้อมูลปางเข้าไปด้วย
     const openModal = (mode: "add" | "edit", ganeshaData?: GaneshaData) => {
         setModalMode(mode);
         setSelectedGanesha(ganeshaData || null);
         setIsModalOpen(true);
+    };
+
+    // ฟังก์ชันใหม่สำหรับสลับสถานะเปิด-ปิด
+    const handleToggleVisibility = async (
+        id: string,
+        name: string,
+        currentStatus: boolean = false,
+    ) => {
+        const actionText = currentStatus ? "นำกลับมาแสดง" : "ซ่อน";
+        const confirmAction = window.confirm(
+            `คุณต้องการ "${actionText}" ปาง "${name}" ใช่หรือไม่?`,
+        );
+
+        if (!confirmAction) return;
+
+        try {
+            // ส่งไปที่ API เส้น PATCH พร้อมแนบค่าสถานะตรงข้ามไปให้
+            const res = await fetch(`/api/ganeshas/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isDeleted: !currentStatus }),
+            });
+
+            if (res.ok) {
+                fetchGaneshas();
+            } else {
+                alert(`เกิดข้อผิดพลาดในการ${actionText}ข้อมูล`);
+            }
+        } catch (error) {
+            console.error("Toggle Error:", error);
+            alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้");
+        }
     };
 
     return (
@@ -119,29 +157,42 @@ export default function DashboardTable() {
                                 ganeshas.map((ganesha) => (
                                     <tr
                                         key={ganesha._id}
-                                        className="hover:bg-neutral-800/30 transition-colors"
+                                        // เงื่อนไข: ถ้าถูกซ่อนอยู่ให้พื้นหลังออกแดงนิดๆ
+                                        className={`transition-colors ${ganesha.isDeleted ? "bg-red-950/20" : "hover:bg-neutral-800/30"}`}
                                     >
-                                        <td className="p-4 text-center text-neutral-400 font-mono">
+                                        <td
+                                            className={`p-4 text-center font-mono ${ganesha.isDeleted ? "text-red-500/70" : "text-neutral-400"}`}
+                                        >
                                             {ganesha.order
                                                 .toString()
                                                 .padStart(2, "0")}
                                         </td>
                                         <td className="p-4">
-                                            <p className="text-neutral-200 font-bold text-sm">
+                                            <p
+                                                className={`font-bold text-sm ${ganesha.isDeleted ? "text-red-500" : "text-neutral-200"}`}
+                                            >
                                                 {ganesha.nameTH}
+                                                {ganesha.isDeleted && (
+                                                    <span className="ml-2 text-[10px] bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                        ถูกซ่อน
+                                                    </span>
+                                                )}
                                             </p>
-                                            <p className="text-neutral-500 text-xs italic font-serif">
+                                            <p
+                                                className={`text-xs italic font-serif ${ganesha.isDeleted ? "text-red-500/70" : "text-neutral-500"}`}
+                                            >
                                                 {ganesha.nameEN}
                                             </p>
                                         </td>
-                                        <td className="p-4 text-center text-neutral-300 text-sm">
+                                        <td
+                                            className={`p-4 text-center text-sm ${ganesha.isDeleted ? "text-red-500/70" : "text-neutral-300"}`}
+                                        >
                                             {(
                                                 ganesha.prays || 0
                                             ).toLocaleString()}
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center justify-center gap-2">
-                                                {/* 3. ส่งข้อมูลแถวนี้ไปให้ Modal ตอนกดปุ่มแก้ไข */}
                                                 <button
                                                     onClick={() =>
                                                         openModal(
@@ -149,16 +200,41 @@ export default function DashboardTable() {
                                                             ganesha,
                                                         )
                                                     }
-                                                    className="p-2 rounded-lg bg-neutral-800 text-amber-500 hover:bg-amber-500 hover:text-neutral-900 transition-colors cursor-pointer"
+                                                    className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                                                        ganesha.isDeleted
+                                                            ? "bg-red-900/30 text-red-500 hover:bg-red-500 hover:text-white"
+                                                            : "bg-neutral-800 text-amber-500 hover:bg-amber-500 hover:text-neutral-900"
+                                                    }`}
                                                     title="แก้ไขข้อมูล"
                                                 >
                                                     <FaPenToSquare className="w-4 h-4" />
                                                 </button>
+
+                                                {/* ปุ่ม Toggle */}
                                                 <button
-                                                    className="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:bg-red-950/50 hover:text-red-500 transition-colors cursor-pointer"
-                                                    title="ซ่อนปางนี้ (Soft Delete)"
+                                                    onClick={() =>
+                                                        handleToggleVisibility(
+                                                            ganesha._id,
+                                                            ganesha.nameTH,
+                                                            ganesha.isDeleted,
+                                                        )
+                                                    }
+                                                    className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                                                        ganesha.isDeleted
+                                                            ? "bg-red-900/30 text-red-500 hover:bg-red-500 hover:text-white"
+                                                            : "bg-neutral-800 text-neutral-400 hover:bg-red-950/50 hover:text-red-500"
+                                                    }`}
+                                                    title={
+                                                        ganesha.isDeleted
+                                                            ? "นำกลับมาแสดง"
+                                                            : "ซ่อนปางนี้"
+                                                    }
                                                 >
-                                                    <FaEyeSlash className="w-4 h-4" />
+                                                    {ganesha.isDeleted ? (
+                                                        <FaEye className="w-4 h-4" />
+                                                    ) : (
+                                                        <FaEyeSlash className="w-4 h-4" />
+                                                    )}
                                                 </button>
                                             </div>
                                         </td>
@@ -174,7 +250,6 @@ export default function DashboardTable() {
                 </div>
             </div>
 
-            {/* 4. ส่งข้อมูล Props ชุดใหม่ไปที่ Modal */}
             <GaneshaFormModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

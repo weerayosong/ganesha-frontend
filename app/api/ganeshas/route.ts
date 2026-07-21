@@ -6,16 +6,15 @@ export async function GET() {
     try {
         await connectMongo();
 
-        // ดึงข้อมูลทั้งหมดที่ยังไม่ได้ถูกลบ (isDeleted: false) เรียงตามลำดับ
-        const ganeshas = await Ganesha.find({ isDeleted: false })
-            .sort({ order: 1 })
-            .lean();
+        // ดึงข้อมูลทั้งหมดโดยไม่ต้องกรอง isDeleted: false
+        // และเรียงลำดับตาม order จากน้อยไปมาก
+        const ganeshas = await Ganesha.find({}).sort({ order: 1 });
 
         return NextResponse.json(ganeshas);
     } catch (error) {
-        console.error("API Error:", error);
+        console.error("API GET Error:", error);
         return NextResponse.json(
-            { error: "Failed to fetch ganeshas data" },
+            { error: "Failed to fetch data" },
             { status: 500 },
         );
     }
