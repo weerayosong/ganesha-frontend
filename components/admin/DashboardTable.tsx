@@ -170,6 +170,7 @@ export default function DashboardTable() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 mode={modalMode}
+                onSuccess={fetchGaneshas}
             />
         </>
     );

@@ -20,3 +20,26 @@ export async function GET() {
         );
     }
 }
+
+export async function POST(request: Request) {
+    try {
+        await connectMongo();
+
+        // รับข้อมูลที่ส่งมาจากหน้าเว็บ
+        const body = await request.json();
+
+        // สร้างข้อมูลใหม่ลง Database
+        const newGanesha = await Ganesha.create({
+            ...body,
+            isDeleted: false,
+        });
+
+        return NextResponse.json(newGanesha, { status: 201 });
+    } catch (error) {
+        console.error("API POST Error:", error);
+        return NextResponse.json(
+            { error: "Failed to create ganesha data" },
+            { status: 500 },
+        );
+    }
+}

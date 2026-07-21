@@ -1,26 +1,87 @@
 "use client";
 
-import { FaXmark, FaFloppyDisk } from "react-icons/fa6";
+import { useState, useEffect } from "react";
+import { FaXmark, FaFloppyDisk, FaSpinner } from "react-icons/fa6";
 
 interface GaneshaFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     mode: "add" | "edit";
+    onSuccess?: () => void; // รับฟังก์ชันรีเฟรชตาราง
 }
+
+const initialForm = {
+    order: "",
+    nameTH: "",
+    nameEN: "",
+    prays: 0,
+    meaning: "",
+    color: "",
+    vehicle: "",
+    weapons: "",
+};
 
 export default function GaneshaFormModal({
     isOpen,
     onClose,
     mode,
+    onSuccess,
 }: GaneshaFormModalProps) {
+    // State สำหรับเก็บข้อมูลฟอร์ม
+    const [formData, setFormData] = useState(initialForm);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // รีเซ็ตฟอร์มทุกครั้งที่เปิด Modal ขึ้นมาใหม่
+    useEffect(() => {
+        if (isOpen && mode === "add") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setFormData(initialForm);
+        }
+    }, [isOpen, mode]);
+
     if (!isOpen) return null;
 
+    // ฟังก์ชันจัดการตอนพิมพ์ข้อมูล
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]:
+                name === "order" || name === "prays"
+                    ? Number(value) || ""
+                    : value,
+        }));
+    };
+
+    // ฟังก์ชันกดยืนยันบันทึกข้อมูล
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
+        try {
+            const res = await fetch("/api/ganeshas", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            if (res.ok) {
+                if (onSuccess) onSuccess(); // สั่งรีเฟรชตาราง
+                onClose(); // ปิด Modal
+            } else {
+                alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+            }
+        } catch (error) {
+            console.error("Submit Error:", error);
+            alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
-        // ดัน z-index ขึ้นไปเผื่อไว้ที่ 9999
         <div className="fixed inset-0 z-9999 flex items-start md:items-center justify-center pt-24 pb-6 px-4 md:p-4 bg-neutral-950/80 backdrop-blur-sm animate-in fade-in duration-300">
-            {/* ปรับ max-h ให้เหลือ 85vh กันล้นจอ และเปลี่ยนเป็น rounded-xl */}
             <div className="bg-neutral-900 border border-amber-900/40 rounded-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto hide-scrollbar shadow-2xl relative animate-in zoom-in-95 duration-300">
-                {/* Header: ลด Padding เหลือ p-4 */}
                 <div className="sticky top-0 bg-neutral-900/95 backdrop-blur border-b border-neutral-800 p-4 flex items-center justify-between z-10">
                     <h2 className="text-lg font-serif font-bold text-amber-500">
                         {mode === "add"
@@ -29,13 +90,13 @@ export default function GaneshaFormModal({
                     </h2>
                     <button
                         onClick={onClose}
+                        disabled={isSubmitting}
                         className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
                     >
                         <FaXmark className="w-4 h-4" />
                     </button>
                 </div>
 
-                {/* Form Body: ลด Padding (p-4) และ Gap (gap-3) */}
                 <div className="p-4 flex flex-col gap-3">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
@@ -44,6 +105,9 @@ export default function GaneshaFormModal({
                             </label>
                             <input
                                 type="number"
+                                name="order"
+                                value={formData.order}
+                                onChange={handleChange}
                                 placeholder="เช่น 1"
                                 className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                             />
@@ -54,6 +118,9 @@ export default function GaneshaFormModal({
                             </label>
                             <input
                                 type="text"
+                                name="nameTH"
+                                value={formData.nameTH}
+                                onChange={handleChange}
                                 placeholder="เช่น พาละ คณปติ"
                                 className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                             />
@@ -67,6 +134,9 @@ export default function GaneshaFormModal({
                             </label>
                             <input
                                 type="text"
+                                name="nameEN"
+                                value={formData.nameEN}
+                                onChange={handleChange}
                                 placeholder="เช่น Bala Ganapati"
                                 className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                             />
@@ -77,6 +147,9 @@ export default function GaneshaFormModal({
                             </label>
                             <input
                                 type="number"
+                                name="prays"
+                                value={formData.prays}
+                                onChange={handleChange}
                                 placeholder="เช่น 0"
                                 className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                             />
@@ -88,6 +161,9 @@ export default function GaneshaFormModal({
                             ความหมาย / พรที่ประทาน
                         </label>
                         <textarea
+                            name="meaning"
+                            value={formData.meaning}
+                            onChange={handleChange}
                             rows={2}
                             placeholder="คำอธิบายความหมายของปางนี้..."
                             className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none resize-none"
@@ -101,6 +177,9 @@ export default function GaneshaFormModal({
                             </label>
                             <input
                                 type="text"
+                                name="color"
+                                value={formData.color}
+                                onChange={handleChange}
                                 placeholder="เช่น สีแดงส้ม"
                                 className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                             />
@@ -111,6 +190,9 @@ export default function GaneshaFormModal({
                             </label>
                             <input
                                 type="text"
+                                name="vehicle"
+                                value={formData.vehicle}
+                                onChange={handleChange}
                                 placeholder="เช่น ประทับนั่งบนดอกบัว"
                                 className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                             />
@@ -123,23 +205,36 @@ export default function GaneshaFormModal({
                         </label>
                         <input
                             type="text"
+                            name="weapons"
+                            value={formData.weapons}
+                            onChange={handleChange}
                             placeholder="เช่น ขนมโมทกะ, งา, บ่วงบาศ, ขวาน"
                             className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                         />
                     </div>
                 </div>
 
-                {/* Footer: ลด Padding */}
                 <div className="p-4 border-t border-neutral-800 flex justify-end gap-2 bg-neutral-900 rounded-b-xl">
                     <button
                         onClick={onClose}
+                        disabled={isSubmitting}
                         className="px-4 py-2 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer"
                     >
                         ยกเลิก
                     </button>
-                    <button className="bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold py-2 px-4 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer text-xs">
-                        <FaFloppyDisk className="w-3.5 h-3.5" />
-                        <span>บันทึกข้อมูล</span>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold py-2 px-4 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSubmitting ? (
+                            <FaSpinner className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                            <FaFloppyDisk className="w-3.5 h-3.5" />
+                        )}
+                        <span>
+                            {isSubmitting ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+                        </span>
                     </button>
                 </div>
             </div>
