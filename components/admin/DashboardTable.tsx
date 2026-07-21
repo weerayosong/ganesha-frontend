@@ -1,38 +1,47 @@
 "use client";
 
-import { useState } from "react";
-// เปลี่ยนไอคอนจาก FaTrashCan เป็น FaEyeSlash
-import { FaPenToSquare, FaEyeSlash, FaPlus } from "react-icons/fa6";
+import { useState, useEffect } from "react";
+import { FaPenToSquare, FaEyeSlash, FaPlus, FaSpinner } from "react-icons/fa6";
 import GaneshaFormModal from "./GaneshaFormModal";
 
-// อัปเดตข้อมูลจำลอง เปลี่ยน arms เป็น prays
-const mockGaneshas = [
-    {
-        id: 1,
-        order: 1,
-        nameTH: "พาละ คณปติ",
-        nameEN: "Bala Ganapati",
-        prays: 1250,
-    },
-    {
-        id: 2,
-        order: 2,
-        nameTH: "ตรุณ คณปติ",
-        nameEN: "Taruna Ganapati",
-        prays: 840,
-    },
-    {
-        id: 3,
-        order: 3,
-        nameTH: "ภักติ คณปติ",
-        nameEN: "Bhakti Ganapati",
-        prays: 3200,
-    },
-];
+// สร้าง Interface ให้ตรงกับโครงสร้าง Database
+interface GaneshaData {
+    _id: string;
+    order: number;
+    nameTH: string;
+    nameEN: string;
+    prays: number;
+}
 
 export default function DashboardTable() {
+    // State สำหรับเก็บข้อมูลจาก Database และสถานะการโหลด
+    const [ganeshas, setGaneshas] = useState<GaneshaData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+
+    // ฟังก์ชันดึงข้อมูลจาก API
+    const fetchGaneshas = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch("/api/ganeshas");
+            if (res.ok) {
+                const data = await res.json();
+                setGaneshas(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch data", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // สั่งให้ดึงข้อมูลทันทีเมื่อโหลด Component นี้เสร็จ
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchGaneshas();
+    }, []);
 
     const openModal = (mode: "add" | "edit") => {
         setModalMode(mode);
@@ -70,7 +79,6 @@ export default function DashboardTable() {
                                 <th className="p-4 font-semibold">
                                     ชื่อปาง (ไทย / Eng)
                                 </th>
-                                {/* เปลี่ยนชื่อคอลัมน์ */}
                                 <th className="p-4 font-semibold text-center w-32">
                                     จำนวนสักการะ
                                 </th>
@@ -80,56 +88,81 @@ export default function DashboardTable() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-800/50">
-                            {mockGaneshas.map((ganesha) => (
-                                <tr
-                                    key={ganesha.id}
-                                    className="hover:bg-neutral-800/30 transition-colors"
-                                >
-                                    <td className="p-4 text-center text-neutral-400 font-mono">
-                                        {ganesha.order
-                                            .toString()
-                                            .padStart(2, "0")}
-                                    </td>
-                                    <td className="p-4">
-                                        <p className="text-neutral-200 font-bold text-sm">
-                                            {ganesha.nameTH}
-                                        </p>
-                                        <p className="text-neutral-500 text-xs italic font-serif">
-                                            {ganesha.nameEN}
-                                        </p>
-                                    </td>
-                                    {/* แสดงข้อมูลยอดการสักการะพร้อมจัดรูปแบบตัวเลข */}
-                                    <td className="p-4 text-center text-neutral-300 text-sm">
-                                        {ganesha.prays.toLocaleString()}
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() =>
-                                                    openModal("edit")
-                                                }
-                                                className="p-2 rounded-lg bg-neutral-800 text-amber-500 hover:bg-amber-500 hover:text-neutral-900 transition-colors cursor-pointer"
-                                                title="แก้ไขข้อมูล"
-                                            >
-                                                <FaPenToSquare className="w-4 h-4" />
-                                            </button>
-                                            {/* เปลี่ยนปุ่มลบเป็นปุ่ม Soft Delete (ซ่อน) */}
-                                            <button
-                                                className="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:bg-red-950/50 hover:text-red-500 transition-colors cursor-pointer"
-                                                title="ซ่อนปางนี้ (Soft Delete)"
-                                            >
-                                                <FaEyeSlash className="w-4 h-4" />
-                                            </button>
+                            {/* แสดงสถานะตอนกำลังโหลด */}
+                            {isLoading ? (
+                                <tr>
+                                    <td
+                                        colSpan={4}
+                                        className="p-8 text-center text-neutral-500"
+                                    >
+                                        <div className="flex flex-col items-center gap-3">
+                                            <FaSpinner className="w-6 h-6 animate-spin text-amber-500" />
+                                            <span>กำลังโหลดข้อมูล...</span>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : ganeshas.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan={4}
+                                        className="p-8 text-center text-neutral-500"
+                                    >
+                                        ไม่พบข้อมูลปางในระบบ
+                                    </td>
+                                </tr>
+                            ) : (
+                                /* ลูปแสดงข้อมูลจริงจาก Database */
+                                ganeshas.map((ganesha) => (
+                                    <tr
+                                        key={ganesha._id}
+                                        className="hover:bg-neutral-800/30 transition-colors"
+                                    >
+                                        <td className="p-4 text-center text-neutral-400 font-mono">
+                                            {ganesha.order
+                                                .toString()
+                                                .padStart(2, "0")}
+                                        </td>
+                                        <td className="p-4">
+                                            <p className="text-neutral-200 font-bold text-sm">
+                                                {ganesha.nameTH}
+                                            </p>
+                                            <p className="text-neutral-500 text-xs italic font-serif">
+                                                {ganesha.nameEN}
+                                            </p>
+                                        </td>
+                                        <td className="p-4 text-center text-neutral-300 text-sm">
+                                            {(
+                                                ganesha.prays || 0
+                                            ).toLocaleString()}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() =>
+                                                        openModal("edit")
+                                                    }
+                                                    className="p-2 rounded-lg bg-neutral-800 text-amber-500 hover:bg-amber-500 hover:text-neutral-900 transition-colors cursor-pointer"
+                                                    title="แก้ไขข้อมูล"
+                                                >
+                                                    <FaPenToSquare className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    className="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:bg-red-950/50 hover:text-red-500 transition-colors cursor-pointer"
+                                                    title="ซ่อนปางนี้ (Soft Delete)"
+                                                >
+                                                    <FaEyeSlash className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 <div className="mt-4 text-xs text-neutral-500 text-right">
-                    แสดงผล 3 จาก 32 รายการ
+                    แสดงผล {ganeshas.length} รายการ
                 </div>
             </div>
 
