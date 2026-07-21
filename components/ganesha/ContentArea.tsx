@@ -18,12 +18,21 @@ interface GaneshaData {
     vehicle: string;
 }
 
-export default function ContentArea({ data }: { data?: GaneshaData }) {
+interface ContentAreaProps {
+    data?: GaneshaData;
+    currentIndex: number;
+    total: number;
+}
+
+export default function ContentArea({
+    data,
+    currentIndex,
+    total,
+}: ContentAreaProps) {
     if (!data) return null;
 
     return (
         <div className="w-full max-w-2xl mx-auto flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-12">
-            {/* โซน Header ด้านบนที่เพิ่ม UX Guide */}
             <div className="flex justify-between items-start border-b border-amber-900/30 pb-2">
                 <div>
                     <span className="text-amber-500 font-bold tracking-widest text-xs uppercase mb-1 block">
@@ -37,11 +46,17 @@ export default function ContentArea({ data }: { data?: GaneshaData }) {
                     </p>
                 </div>
 
-                <div className="flex flex-col items-end mt-1">
+                {/* เพิ่มตัวบอกเลขลำดับตรงนี้ */}
+                <div className="flex flex-col items-end gap-1.5 mt-1">
+                    <span className="text-amber-500/80 font-serif text-sm tracking-wider pr-1">
+                        {currentIndex}{" "}
+                        <span className="text-neutral-600 mx-1">/</span> {total}
+                    </span>
+
                     <div className="flex items-center gap-1.5 bg-neutral-900/60 px-3 py-1.5 rounded-full border border-neutral-800 text-neutral-400 shadow-sm">
                         <FaChevronLeft className="w-2.5 h-2.5" />
                         <span className="text-[10px] tracking-widest uppercase">
-                            ปัดซ้าย-ขวาเพื่อเปลี่ยนปาง
+                            ปัดเพื่อเปลี่ยน
                         </span>
                         <FaChevronRight className="w-2.5 h-2.5" />
                     </div>
