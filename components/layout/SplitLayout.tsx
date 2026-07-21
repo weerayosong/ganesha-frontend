@@ -18,6 +18,7 @@ interface SplitLayoutProps {
         weapons: string;
         imageUrl?: string;
         mantra?: string;
+        prays: number;
     }[];
 }
 

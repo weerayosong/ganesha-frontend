@@ -13,6 +13,7 @@ interface GaneshaDoc {
     weapons: string;
     imageUrl?: string;
     mantra?: string;
+    prays?: number;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -37,6 +38,7 @@ export default async function HomePage() {
             weapons: doc.weapons,
             imageUrl: doc.imageUrl || "",
             mantra: doc.mantra || "",
+            prays: doc.prays || 0,
             createdAt: doc.createdAt?.toISOString(),
             updatedAt: doc.updatedAt?.toISOString(),
         };

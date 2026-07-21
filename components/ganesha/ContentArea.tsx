@@ -1,14 +1,18 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
     FaHandsPraying,
     FaPlus,
     FaCircleInfo,
     FaChevronLeft,
     FaChevronRight,
+    FaCheck,
 } from "react-icons/fa6";
+import confetti from "canvas-confetti";
 
 interface GaneshaData {
+    _id: string;
     order: number;
     nameTH: string;
     nameEN: string;
@@ -16,6 +20,7 @@ interface GaneshaData {
     color: string;
     weapons: string;
     vehicle: string;
+    prays: number; // <--- เพิ่ม prays
 }
 
 interface ContentAreaProps {
@@ -29,7 +34,74 @@ export default function ContentArea({
     currentIndex,
     total,
 }: ContentAreaProps) {
+    const [shelf, setShelf] = useState<string[]>([]);
+
+    // State สำหรับเก็บยอดสักการะแบบ Real-time บนหน้าจอ
+    const [prayCount, setPrayCount] = useState(0);
+
+    useEffect(() => {
+        const savedShelf = JSON.parse(
+            localStorage.getItem("ganesha_shelf") || "[]",
+        );
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setShelf(savedShelf);
+    }, []);
+
+    // อัปเดตตัวเลขเมื่อปัดเปลี่ยนปาง
+    useEffect(() => {
+        if (data) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setPrayCount(data.prays || 0);
+        }
+    }, [data]);
+
+    const isOnShelf = data ? shelf.includes(data._id) : false;
+
     if (!data) return null;
+
+    const handlePray = async () => {
+        // 1. ยิง Effect ทันที
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#FFD700", "#FFA500", "#FF8C00"],
+        });
+
+        // 2. บวกเลขบนหน้าจอทันที ไม่ต้องรอ Database (Optimistic UI)
+        setPrayCount((prev) => prev + 1);
+
+        // 3. ยิง API ไปอัปเดตหลังบ้านแบบเงียบๆ
+        try {
+            await fetch("/api/pray", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: data._id }),
+            });
+        } catch (error) {
+            console.error("Failed to pray:", error);
+        }
+    };
+
+    const handleToggleShelf = () => {
+        let newShelf;
+
+        if (isOnShelf) {
+            newShelf = shelf.filter((id) => id !== data._id);
+        } else {
+            newShelf = [...shelf, data._id];
+
+            confetti({
+                particleCount: 40,
+                spread: 50,
+                origin: { y: 0.8 },
+                colors: ["#4CAF50", "#8BC34A"],
+            });
+        }
+
+        setShelf(newShelf);
+        localStorage.setItem("ganesha_shelf", JSON.stringify(newShelf));
+    };
 
     return (
         <div className="w-full max-w-2xl mx-auto flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-12">
@@ -46,7 +118,6 @@ export default function ContentArea({
                     </p>
                 </div>
 
-                {/* เพิ่มตัวบอกเลขลำดับตรงนี้ */}
                 <div className="flex flex-col items-end gap-1.5 mt-1">
                     <span className="text-amber-500/80 font-serif text-sm tracking-wider pr-1">
                         {currentIndex}{" "}
@@ -97,13 +168,39 @@ export default function ContentArea({
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 mt-1">
-                <button className="flex-1 bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer group">
+                <button
+                    onClick={handlePray}
+                    className="flex-1 bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer group relative overflow-hidden"
+                >
                     <FaHandsPraying className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-sm">สักการะขอพร</span>
+                    {/* แสดงตัวเลขยอดสักการะในปุ่ม */}
+                    {prayCount > 0 && (
+                        <span className="text-[10px] bg-neutral-950/20 px-2 py-0.5 rounded-full ml-1 font-sans">
+                            {prayCount.toLocaleString()}
+                        </span>
+                    )}
                 </button>
-                <button className="flex-1 bg-neutral-900 hover:bg-neutral-800 border border-amber-700/50 text-amber-500 font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer group">
-                    <FaPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm">อัญเชิญขึ้นหิ้ง</span>
+
+                <button
+                    onClick={handleToggleShelf}
+                    className={`flex-1 border font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer group ${
+                        isOnShelf
+                            ? "bg-amber-900/30 border-amber-500/50 text-amber-500"
+                            : "bg-neutral-900 hover:bg-neutral-800 border-amber-700/50 text-amber-500"
+                    }`}
+                >
+                    {isOnShelf ? (
+                        <>
+                            <FaCheck className="w-4 h-4" />
+                            <span className="text-sm">อยู่บนหิ้งแล้ว</span>
+                        </>
+                    ) : (
+                        <>
+                            <FaPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm">อัญเชิญขึ้นหิ้ง</span>
+                        </>
+                    )}
                 </button>
             </div>
         </div>
