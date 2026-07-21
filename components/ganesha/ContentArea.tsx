@@ -83,13 +83,28 @@ export default function ContentArea({
         }
     };
 
+    const MAX_SHELF_LIMIT = 3; // จำกัดการอัญเชิญสูงสุด 3 ปาง
+
     const handleToggleShelf = () => {
         let newShelf;
 
         if (isOnShelf) {
             newShelf = shelf.filter((id) => id !== data._id);
+            setShelf(newShelf);
+            localStorage.setItem("ganesha_shelf", JSON.stringify(newShelf));
         } else {
+            // เช็ค Limit ก่อนเพิ่ม
+            if (shelf.length >= MAX_SHELF_LIMIT) {
+                // UI แจ้งเตือนแบบ Custom เล็กๆ ใช้ alert ธรรมดาไปก่อน
+                alert(
+                    `พื้นที่หิ้งพระเต็มแล้ว\nท่านสามารถอัญเชิญได้สูงสุด ${MAX_SHELF_LIMIT} ปาง\nกรุณาอัญเชิญปางอื่นลงจากหิ้งก่อนครับ`,
+                );
+                return;
+            }
+
             newShelf = [...shelf, data._id];
+            setShelf(newShelf);
+            localStorage.setItem("ganesha_shelf", JSON.stringify(newShelf));
 
             confetti({
                 particleCount: 40,
@@ -98,9 +113,6 @@ export default function ContentArea({
                 colors: ["#4CAF50", "#8BC34A"],
             });
         }
-
-        setShelf(newShelf);
-        localStorage.setItem("ganesha_shelf", JSON.stringify(newShelf));
     };
 
     return (

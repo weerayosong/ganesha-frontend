@@ -1,6 +1,7 @@
 import SplitLayout from "@/components/layout/SplitLayout";
 import connectMongo from "@/lib/mongodb";
 import Ganesha from "@/models/Ganesha";
+import FloatingMenu from "@/components/layout/FloatingMenu";
 
 interface GaneshaDoc {
     _id: { toString: () => string };
@@ -47,6 +48,7 @@ export default async function HomePage() {
     return (
         <main className="min-h-screen bg-neutral-950 flex flex-col font-sans text-neutral-200">
             <SplitLayout initialData={ganeshaData} />
+            <FloatingMenu />
         </main>
     );
 }
