@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// เพิ่ม Import FaEye เข้ามาด้วย
+// นำเข้า toast เข้ามาใช้งาน
+import toast from "react-hot-toast";
 import {
     FaPenToSquare,
     FaEyeSlash,
@@ -21,7 +22,7 @@ interface GaneshaData {
     color?: string;
     vehicle?: string;
     weapons?: string;
-    isDeleted?: boolean; // เพิ่มฟิลด์นี้เข้ามาใน Interface
+    isDeleted?: boolean;
 }
 
 export default function DashboardTable() {
@@ -60,36 +61,81 @@ export default function DashboardTable() {
         setIsModalOpen(true);
     };
 
-    // ฟังก์ชันใหม่สำหรับสลับสถานะเปิด-ปิด
-    const handleToggleVisibility = async (
+    const handleToggleVisibility = (
         id: string,
         name: string,
         currentStatus: boolean = false,
     ) => {
         const actionText = currentStatus ? "นำกลับมาแสดง" : "ซ่อน";
-        const confirmAction = window.confirm(
-            `คุณต้องการ "${actionText}" ปาง "${name}" ใช่หรือไม่?`,
+
+        // ใช้ Custom Toast แทน window.confirm
+        toast(
+            (t) => (
+                <div className="flex flex-col gap-3">
+                    <p className="text-sm text-white">
+                        คุณต้องการ{" "}
+                        <span className="text-amber-500 font-bold">
+                            {actionText}
+                        </span>{" "}
+                        ปาง &quot;{name}&quot; ใช่หรือไม่?
+                    </p>
+                    <div className="flex justify-end gap-2 mt-1">
+                        <button
+                            onClick={() => toast.dismiss(t.id)}
+                            className="px-3 py-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                        >
+                            ยกเลิก
+                        </button>
+                        <button
+                            onClick={async () => {
+                                toast.dismiss(t.id); // ปิดกล่องยืนยันก่อน
+                                // --- เริ่มกระบวนการยิง API ---
+                                try {
+                                    const res = await fetch(
+                                        `/api/ganeshas/${id}`,
+                                        {
+                                            method: "PATCH",
+                                            headers: {
+                                                "Content-Type":
+                                                    "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                                isDeleted: !currentStatus,
+                                            }),
+                                        },
+                                    );
+
+                                    if (res.ok) {
+                                        toast.success(
+                                            currentStatus
+                                                ? `นำ "${name}" กลับมาแสดงแล้ว`
+                                                : `ซ่อน "${name}" เรียบร้อย`,
+                                        );
+                                        fetchGaneshas();
+                                    } else {
+                                        toast.error(
+                                            `เกิดข้อผิดพลาดในการ${actionText}ข้อมูล`,
+                                        );
+                                    }
+                                } catch (error) {
+                                    console.error("Toggle Error:", error);
+                                    toast.error(
+                                        "ไม่สามารถติดต่อเซิร์ฟเวอร์ได้",
+                                    );
+                                }
+                            }}
+                            className="px-3 py-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                            ยืนยัน
+                        </button>
+                    </div>
+                </div>
+            ),
+            {
+                duration: Infinity, // ตั้งให้ Toast ไม่หายไปเองจนกว่าจะกดเลือก
+                style: { minWidth: "300px" },
+            },
         );
-
-        if (!confirmAction) return;
-
-        try {
-            // ส่งไปที่ API เส้น PATCH พร้อมแนบค่าสถานะตรงข้ามไปให้
-            const res = await fetch(`/api/ganeshas/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ isDeleted: !currentStatus }),
-            });
-
-            if (res.ok) {
-                fetchGaneshas();
-            } else {
-                alert(`เกิดข้อผิดพลาดในการ${actionText}ข้อมูล`);
-            }
-        } catch (error) {
-            console.error("Toggle Error:", error);
-            alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้");
-        }
     };
 
     return (
@@ -157,7 +203,6 @@ export default function DashboardTable() {
                                 ganeshas.map((ganesha) => (
                                     <tr
                                         key={ganesha._id}
-                                        // เงื่อนไข: ถ้าถูกซ่อนอยู่ให้พื้นหลังออกแดงนิดๆ
                                         className={`transition-colors ${ganesha.isDeleted ? "bg-red-950/20" : "hover:bg-neutral-800/30"}`}
                                     >
                                         <td
@@ -210,7 +255,6 @@ export default function DashboardTable() {
                                                     <FaPenToSquare className="w-4 h-4" />
                                                 </button>
 
-                                                {/* ปุ่ม Toggle */}
                                                 <button
                                                     onClick={() =>
                                                         handleToggleVisibility(

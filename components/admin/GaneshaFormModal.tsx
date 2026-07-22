@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FaXmark, FaFloppyDisk, FaSpinner, FaImage } from "react-icons/fa6";
+import toast from "react-hot-toast";
 
 interface GaneshaInitialData {
     _id?: string;
@@ -128,7 +129,7 @@ export default function GaneshaFormModal({
             }
         } catch (error) {
             console.error("Upload failed", error);
-            alert("ไม่สามารถอัปโหลดรูปภาพได้ กรุณาลองใหม่อีกครั้ง");
+            toast.error("ไม่สามารถอัปโหลดรูปภาพได้ กรุณาลองใหม่อีกครั้ง");
         } finally {
             setIsUploadingImage(false);
         }
@@ -150,6 +151,11 @@ export default function GaneshaFormModal({
             });
 
             if (res.ok) {
+                toast.success(
+                    mode === "add"
+                        ? "เพิ่มข้อมูลสำเร็จ!"
+                        : "อัปเดตข้อมูลสำเร็จ!",
+                );
                 if (onSuccess) onSuccess();
                 onClose();
             } else {
@@ -157,11 +163,13 @@ export default function GaneshaFormModal({
                 const errorData = await res.json();
 
                 // 2. เอาข้อความนั้นมาโชว์ ถ้าไม่มีถึงจะใช้ข้อความสำรอง
-                alert(errorData.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                toast.error(
+                    errorData.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+                );
             }
         } catch (error) {
             console.error("Submit Error:", error);
-            alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้");
+            toast.error("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้");
         } finally {
             setIsSubmitting(false);
         }
@@ -346,7 +354,6 @@ export default function GaneshaFormModal({
                         />
                     </div>
 
-                    {/* 5. เพิ่มฟอร์มสำหรับกรอกคาถาบูชา */}
                     <div>
                         <label className="block text-[11px] text-neutral-400 mb-1 uppercase tracking-wider">
                             คาถาบูชา

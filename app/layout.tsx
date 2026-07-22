@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Serif_Thai } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+import { Toaster } from "react-hot-toast";
 
 const notoSerifThai = Noto_Serif_Thai({
     subsets: ["thai", "latin"],
@@ -36,6 +37,17 @@ export default function RootLayout({
                 <div className="flex-1 overflow-hidden relative">
                     {children}
                 </div>
+                {/* Toaster */}
+                <Toaster
+                    position="bottom-right"
+                    toastOptions={{
+                        style: {
+                            background: "#171717",
+                            color: "#fff",
+                            border: "1px solid rgba(120, 53, 15, 0.4)",
+                        },
+                    }}
+                />
             </body>
         </html>
     );
