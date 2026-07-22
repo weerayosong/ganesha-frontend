@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { FaXmark, FaFloppyDisk, FaSpinner, FaImage } from "react-icons/fa6";
 
-// 1. เพิ่ม imageUrl ใน Interface
 interface GaneshaInitialData {
     _id?: string;
     order: number | string;
@@ -15,17 +14,9 @@ interface GaneshaInitialData {
     vehicle?: string;
     weapons?: string;
     imageUrl?: string;
+    mantra?: string;
 }
 
-interface GaneshaFormModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    mode: "add" | "edit";
-    onSuccess?: () => void;
-    initialData?: GaneshaInitialData | null;
-}
-
-// 2. เพิ่ม imageUrl ใน State
 interface FormDataState {
     order: number | string;
     nameTH: string;
@@ -36,6 +27,15 @@ interface FormDataState {
     vehicle: string;
     weapons: string;
     imageUrl: string;
+    mantra: string;
+}
+
+interface GaneshaFormModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    mode: "add" | "edit";
+    onSuccess?: () => void;
+    initialData?: GaneshaInitialData | null;
 }
 
 const emptyForm: FormDataState = {
@@ -47,7 +47,8 @@ const emptyForm: FormDataState = {
     color: "",
     vehicle: "",
     weapons: "",
-    imageUrl: "", // ค่าเริ่มต้น
+    imageUrl: "",
+    mantra: "",
 };
 
 export default function GaneshaFormModal({
@@ -59,8 +60,6 @@ export default function GaneshaFormModal({
 }: GaneshaFormModalProps) {
     const [formData, setFormData] = useState(emptyForm);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // State สำหรับบอกว่ากำลังอัปโหลดรูปอยู่
     const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     useEffect(() => {
@@ -76,7 +75,8 @@ export default function GaneshaFormModal({
                     color: initialData.color || "",
                     vehicle: initialData.vehicle || "",
                     weapons: initialData.weapons || "",
-                    imageUrl: initialData.imageUrl || "", // ดึงรูปเก่ามาแสดงถ้ามี
+                    imageUrl: initialData.imageUrl || "",
+                    mantra: initialData.mantra || "",
                 });
             } else {
                 setFormData(emptyForm);
@@ -99,7 +99,6 @@ export default function GaneshaFormModal({
         }));
     };
 
-    // 3. ปรับแก้ handleImageUpload ให้ใช้ setFormData
     const handleImageUpload = async (
         e: React.ChangeEvent<HTMLInputElement>,
     ) => {
@@ -117,7 +116,6 @@ export default function GaneshaFormModal({
                 body: uploadData,
             });
 
-            // เพิ่มจุดเช็ค: ถ้าเซิร์ฟเวอร์ตอบกลับมาว่ามีปัญหา (เช่น 404 หรือ 500) ให้โยน Error ออกไปเลย
             if (!res.ok) {
                 const errorText = await res.text();
                 throw new Error(`Server Error: ${res.status} - ${errorText}`);
@@ -148,7 +146,7 @@ export default function GaneshaFormModal({
             const res = await fetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData), // ส่ง formData ที่มี imageUrl ไปด้วย
+                body: JSON.stringify(formData),
             });
 
             if (res.ok) {
@@ -184,13 +182,11 @@ export default function GaneshaFormModal({
                 </div>
 
                 <div className="p-4 flex flex-col gap-4">
-                    {/* 4. ส่วนอัปโหลดรูปภาพ */}
                     <div className="bg-neutral-950/50 p-4 rounded-xl border border-neutral-800/50">
                         <label className="block text-[11px] text-neutral-400 mb-2 uppercase tracking-wider">
                             รูปภาพประจำปาง
                         </label>
                         <div className="flex items-center gap-4">
-                            {/* แสดงรูป Preview ถ้าอัปโหลดเสร็จแล้ว */}
                             {formData.imageUrl ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 <img
@@ -345,6 +341,21 @@ export default function GaneshaFormModal({
                             className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none"
                         />
                     </div>
+
+                    {/* 5. เพิ่มฟอร์มสำหรับกรอกคาถาบูชา */}
+                    <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1 uppercase tracking-wider">
+                            คาถาบูชา
+                        </label>
+                        <textarea
+                            name="mantra"
+                            value={formData.mantra}
+                            onChange={handleChange}
+                            rows={2}
+                            placeholder="เช่น โอม ศรี คเณศายะ นะมะฮา..."
+                            className="w-full bg-neutral-950 border border-neutral-800 text-white text-sm rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 px-3 py-2 outline-none resize-none"
+                        ></textarea>
+                    </div>
                 </div>
 
                 <div className="p-4 border-t border-neutral-800 flex justify-end gap-2 bg-neutral-900 rounded-b-xl">
@@ -355,7 +366,6 @@ export default function GaneshaFormModal({
                     >
                         ยกเลิก
                     </button>
-                    {/* ปิดการใช้งานปุ่มบันทึก หากกำลังอัปโหลดรูปอยู่ */}
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting || isUploadingImage}
