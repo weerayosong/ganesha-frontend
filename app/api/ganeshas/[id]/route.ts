@@ -1,38 +1,48 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Ganesha from "@/models/Ganesha";
+import { ganeshaSchema } from "@/lib/validations";
 
 // ฟังก์ชัน PUT สำหรับอัปเดตข้อมูล
 export async function PUT(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }, // ปรับ Type ของ params
+    { params }: { params: { id: string } },
 ) {
     try {
         await connectMongo();
+
         const body = await request.json();
 
-        // เพิ่ม await ก่อนเรียกใช้ params (รองรับ Next.js 15)
-        const resolvedParams = await params;
-        const id = resolvedParams.id;
+        // 2. ส่งข้อมูลเข้าเครื่องสแกนของ Zod
+        const validation = ganeshaSchema.safeParse(body);
 
+        // 3. ถ้าสแกนไม่ผ่าน ให้เตือนกลับไป
+        if (!validation.success) {
+            return NextResponse.json(
+                { error: validation.error.issues[0].message },
+                { status: 400 },
+            );
+        }
+
+        // 4. ถ้าผ่าน ให้เอาข้อมูลที่คลีนแล้วไปอัปเดต
         const updatedGanesha = await Ganesha.findByIdAndUpdate(
-            id,
-            { $set: body },
-            { new: true },
+            params.id,
+            validation.data, // ใช้ข้อมูลที่ผ่าน Zod แล้ว
+            { new: true, runValidators: true }, // ให้มันคืนค่าตัวใหม่กลับมา
         );
 
         if (!updatedGanesha) {
             return NextResponse.json(
-                { error: "ไม่พบข้อมูลปางนี้" },
+                { error: "ไม่พบข้อมูลที่ต้องการแก้ไข" },
                 { status: 404 },
             );
         }
 
         return NextResponse.json(updatedGanesha);
     } catch (error) {
-        console.error("API PUT Error:", error);
+        console.error("Update Ganesha Error:", error);
         return NextResponse.json(
-            { error: "Failed to update" },
+            { error: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" },
             { status: 500 },
         );
     }

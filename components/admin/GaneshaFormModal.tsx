@@ -153,7 +153,11 @@ export default function GaneshaFormModal({
                 if (onSuccess) onSuccess();
                 onClose();
             } else {
-                alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                // 1. แกะกล่อง Response เพื่อดึงข้อความ Error ที่ API ส่งมา (จาก Zod)
+                const errorData = await res.json();
+
+                // 2. เอาข้อความนั้นมาโชว์ ถ้าไม่มีถึงจะใช้ข้อความสำรอง
+                alert(errorData.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
             }
         } catch (error) {
             console.error("Submit Error:", error);

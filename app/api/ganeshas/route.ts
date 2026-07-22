@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import Ganesha from "@/models/Ganesha";
+import { ganeshaSchema } from "@/lib/validations";
 
 export async function GET() {
     try {
@@ -24,20 +25,28 @@ export async function POST(request: Request) {
     try {
         await connectMongo();
 
-        // รับข้อมูลที่ส่งมาจากหน้าเว็บ
+        // รับก้อนข้อมูลจาก Frontend
         const body = await request.json();
 
-        // สร้างข้อมูลใหม่ลง Database
-        const newGanesha = await Ganesha.create({
-            ...body,
-            isDeleted: false,
-        });
+        // 2. ส่งข้อมูลเข้าเครื่องสแกนของ Zod
+        const validation = ganeshaSchema.safeParse(body);
+
+        // 3. ถ้าสแกนไม่ผ่าน (ข้อมูลผิดกฎ) ให้เด้งกลับทันที พร้อมส่งข้อความ Error ไปบอก Frontend
+        if (!validation.success) {
+            return NextResponse.json(
+                { error: validation.error.issues[0].message },
+                { status: 400 },
+            );
+        }
+
+        // 4. ถ้าผ่านหมด ให้ใช้ข้อมูลที่คลีนแล้ว (validation.data) ไปเซฟลง Database
+        const newGanesha = await Ganesha.create(validation.data);
 
         return NextResponse.json(newGanesha, { status: 201 });
     } catch (error) {
-        console.error("API POST Error:", error);
+        console.error("Create Ganesha Error:", error);
         return NextResponse.json(
-            { error: "Failed to create ganesha data" },
+            { error: "เกิดข้อผิดพลาดในการสร้างข้อมูล" },
             { status: 500 },
         );
     }
