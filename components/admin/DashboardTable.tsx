@@ -3,13 +3,7 @@
 import { useState, useEffect } from "react";
 // นำเข้า toast เข้ามาใช้งาน
 import toast from "react-hot-toast";
-import {
-    FaPenToSquare,
-    FaEyeSlash,
-    FaEye,
-    FaPlus,
-    FaSpinner,
-} from "react-icons/fa6";
+import { FaPenToSquare, FaEyeSlash, FaEye, FaPlus } from "react-icons/fa6";
 import GaneshaFormModal from "./GaneshaFormModal";
 
 interface GaneshaData {
