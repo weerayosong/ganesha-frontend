@@ -6,10 +6,14 @@ import { ganeshaSchema } from "@/lib/validations";
 // ฟังก์ชัน PUT สำหรับอัปเดตข้อมูล
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } },
+    { params }: { params: Promise<{ id: string }> },
 ) {
     try {
         await connectMongo();
+
+        // 1. เพิ่มบรรทัดนี้ เพื่อรอรับค่า (await) และแกะเอา id ออกมาจาก params
+        const resolvedParams = await params;
+        const id = resolvedParams.id;
 
         const body = await request.json();
 
@@ -26,9 +30,9 @@ export async function PUT(
 
         // 4. ถ้าผ่าน ให้เอาข้อมูลที่คลีนแล้วไปอัปเดต
         const updatedGanesha = await Ganesha.findByIdAndUpdate(
-            params.id,
-            validation.data, // ใช้ข้อมูลที่ผ่าน Zod แล้ว
-            { new: true, runValidators: true }, // ให้มันคืนค่าตัวใหม่กลับมา
+            id, // <--- เปลี่ยนจาก params.id เป็นตัวแปร id ที่เราแกะออกมาแล้ว
+            validation.data,
+            { new: true, runValidators: true },
         );
 
         if (!updatedGanesha) {
