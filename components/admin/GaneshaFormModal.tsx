@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FaXmark, FaFloppyDisk, FaSpinner } from "react-icons/fa6";
+import { FaXmark, FaFloppyDisk, FaSpinner, FaImage } from "react-icons/fa6";
 
-// สร้าง Interface มารองรับข้อมูลแทนการใช้ any
+// 1. เพิ่ม imageUrl ใน Interface
 interface GaneshaInitialData {
     _id?: string;
     order: number | string;
@@ -14,6 +14,7 @@ interface GaneshaInitialData {
     color?: string;
     vehicle?: string;
     weapons?: string;
+    imageUrl?: string;
 }
 
 interface GaneshaFormModalProps {
@@ -24,6 +25,7 @@ interface GaneshaFormModalProps {
     initialData?: GaneshaInitialData | null;
 }
 
+// 2. เพิ่ม imageUrl ใน State
 interface FormDataState {
     order: number | string;
     nameTH: string;
@@ -33,6 +35,7 @@ interface FormDataState {
     color: string;
     vehicle: string;
     weapons: string;
+    imageUrl: string;
 }
 
 const emptyForm: FormDataState = {
@@ -44,6 +47,7 @@ const emptyForm: FormDataState = {
     color: "",
     vehicle: "",
     weapons: "",
+    imageUrl: "", // ค่าเริ่มต้น
 };
 
 export default function GaneshaFormModal({
@@ -55,6 +59,9 @@ export default function GaneshaFormModal({
 }: GaneshaFormModalProps) {
     const [formData, setFormData] = useState(emptyForm);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // State สำหรับบอกว่ากำลังอัปโหลดรูปอยู่
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -69,6 +76,7 @@ export default function GaneshaFormModal({
                     color: initialData.color || "",
                     vehicle: initialData.vehicle || "",
                     weapons: initialData.weapons || "",
+                    imageUrl: initialData.imageUrl || "", // ดึงรูปเก่ามาแสดงถ้ามี
                 });
             } else {
                 setFormData(emptyForm);
@@ -91,6 +99,43 @@ export default function GaneshaFormModal({
         }));
     };
 
+    // 3. ปรับแก้ handleImageUpload ให้ใช้ setFormData
+    const handleImageUpload = async (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingImage(true);
+
+        const uploadData = new FormData();
+        uploadData.append("file", file);
+
+        try {
+            const res = await fetch("/api/upload-image", {
+                method: "POST",
+                body: uploadData,
+            });
+
+            // เพิ่มจุดเช็ค: ถ้าเซิร์ฟเวอร์ตอบกลับมาว่ามีปัญหา (เช่น 404 หรือ 500) ให้โยน Error ออกไปเลย
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Server Error: ${res.status} - ${errorText}`);
+            }
+
+            const data = await res.json();
+
+            if (data.secure_url) {
+                setFormData((prev) => ({ ...prev, imageUrl: data.secure_url }));
+            }
+        } catch (error) {
+            console.error("Upload failed", error);
+            alert("ไม่สามารถอัปโหลดรูปภาพได้ กรุณาลองใหม่อีกครั้ง");
+        } finally {
+            setIsUploadingImage(false);
+        }
+    };
+
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
@@ -103,7 +148,7 @@ export default function GaneshaFormModal({
             const res = await fetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(formData), // ส่ง formData ที่มี imageUrl ไปด้วย
             });
 
             if (res.ok) {
@@ -131,14 +176,61 @@ export default function GaneshaFormModal({
                     </h2>
                     <button
                         onClick={onClose}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isUploadingImage}
                         className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
                     >
                         <FaXmark className="w-4 h-4" />
                     </button>
                 </div>
 
-                <div className="p-4 flex flex-col gap-3">
+                <div className="p-4 flex flex-col gap-4">
+                    {/* 4. ส่วนอัปโหลดรูปภาพ */}
+                    <div className="bg-neutral-950/50 p-4 rounded-xl border border-neutral-800/50">
+                        <label className="block text-[11px] text-neutral-400 mb-2 uppercase tracking-wider">
+                            รูปภาพประจำปาง
+                        </label>
+                        <div className="flex items-center gap-4">
+                            {/* แสดงรูป Preview ถ้าอัปโหลดเสร็จแล้ว */}
+                            {formData.imageUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                    src={formData.imageUrl}
+                                    alt="Preview"
+                                    className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg border border-amber-900/50 shadow-md"
+                                />
+                            ) : (
+                                <div className="w-16 h-16 md:w-20 md:h-20 bg-neutral-900 border border-neutral-800 rounded-lg flex items-center justify-center text-neutral-600">
+                                    <FaImage className="w-6 h-6" />
+                                </div>
+                            )}
+
+                            <div className="flex-1">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    disabled={isUploadingImage || isSubmitting}
+                                    className="w-full text-sm text-neutral-400
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-lg file:border-0
+                                        file:text-xs file:font-bold
+                                        file:bg-amber-600/20 file:text-amber-500
+                                        hover:file:bg-amber-600/40 file:transition-colors
+                                        file:cursor-pointer disabled:opacity-50 cursor-pointer"
+                                />
+                                {isUploadingImage && (
+                                    <div className="mt-2 text-xs text-amber-500 flex items-center gap-1.5">
+                                        <FaSpinner className="w-3 h-3 animate-spin" />
+                                        <span>
+                                            กำลังอัปโหลดรูปภาพไปยัง
+                                            Cloudinary...
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                             <label className="block text-[11px] text-neutral-400 mb-1 uppercase tracking-wider">
@@ -258,14 +350,15 @@ export default function GaneshaFormModal({
                 <div className="p-4 border-t border-neutral-800 flex justify-end gap-2 bg-neutral-900 rounded-b-xl">
                     <button
                         onClick={onClose}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isUploadingImage}
                         className="px-4 py-2 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer"
                     >
                         ยกเลิก
                     </button>
+                    {/* ปิดการใช้งานปุ่มบันทึก หากกำลังอัปโหลดรูปอยู่ */}
                     <button
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isUploadingImage}
                         className="bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold py-2 px-4 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (
