@@ -64,10 +64,10 @@ export default function FlipCard({
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent pointer-events-none"></div>
 
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1.5 rounded-full border border-amber-700/40 backdrop-blur-md opacity-70 flex items-center gap-2">
+                    <div className="absolute w-[90%] bottom-2 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1.5 rounded-full border border-amber-700/40 backdrop-blur-md opacity-70 flex items-center justify-center gap-2">
                         <FaArrowsUpDown className="w-2.5 h-2.5 text-amber-400" />
                         <span className="text-[9px] text-amber-200 tracking-widest uppercase">
-                            ปัดขึ้น-ลงเพื่อพลิกการ์ด
+                            ปัดขึ้น-ลง เพื่อพลิกการ์ด
                         </span>
                     </div>
                 </div>

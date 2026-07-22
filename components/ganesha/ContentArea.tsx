@@ -116,7 +116,7 @@ export default function ContentArea({
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-12">
+        <div className="w-full max-w-2xl mx-auto flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-32 md:pb-12">
             <div className="flex justify-between items-start border-b border-amber-900/30 pb-2">
                 <div>
                     <span className="text-amber-500 font-bold tracking-widest text-xs uppercase mb-1 block">
