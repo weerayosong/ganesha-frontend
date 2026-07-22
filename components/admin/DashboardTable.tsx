@@ -179,17 +179,30 @@ export default function DashboardTable() {
                         </thead>
                         <tbody className="divide-y divide-neutral-800/50">
                             {isLoading ? (
-                                <tr>
-                                    <td
-                                        colSpan={4}
-                                        className="p-8 text-center text-neutral-500"
+                                // วนลูปสร้าง Skeleton จำลองขึ้นมา 5 แถวระหว่างรอข้อมูล
+                                [...Array(5)].map((_, index) => (
+                                    <tr
+                                        key={index}
+                                        className="animate-pulse border-b border-neutral-800/50"
                                     >
-                                        <div className="flex flex-col items-center gap-3">
-                                            <FaSpinner className="w-6 h-6 animate-spin text-amber-500" />
-                                            <span>กำลังโหลดข้อมูล...</span>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        <td className="p-4 text-center">
+                                            <div className="h-4 bg-neutral-800 rounded w-6 mx-auto"></div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="h-4 bg-neutral-800 rounded w-48 mb-2"></div>
+                                            <div className="h-3 bg-neutral-800/50 rounded w-32"></div>
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <div className="h-4 bg-neutral-800 rounded w-12 mx-auto"></div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-8 h-8 bg-neutral-800 rounded-lg"></div>
+                                                <div className="w-8 h-8 bg-neutral-800 rounded-lg"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                             ) : ganeshas.length === 0 ? (
                                 <tr>
                                     <td
